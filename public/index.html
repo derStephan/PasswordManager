@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>">
+<title>Password</title>
+<style>
+html {height: 100%;box-sizing: border-box;}
+body {margin: 10px; line-height: 1.25em; font-size: 13px; background: #F9F9F9;overflow-y: scroll;overflow: overlay;}
+body, select, option, optgroup, button {font-family: "Lucida Grande",Verdana,Arial,"Bitstream Vera Sans",sans-serif;}
+table {margin: 10px 12px 12px 0; border: 1px #BBB solid; font-size: 90%; border-radius:5px;}
+th{position: sticky;top:0;}
+td, th {background-color: #fff; padding: 4px 6px; border: 1px #DfDfDf solid; border-width: 1px 0 0 1px; white-space: pre-line;max-width:200px;overflow: hidden;text-overflow: ellipsis;}
+tr:nth-child(even) td, tr:nth-child(even) th {background-color: #F1F1F1;}
+input, select{width:175px;display: inline-block; box-sizing:border-box;border-radius:3px}
+input[type="checkbox"]{width:9px; margin-left:0px}
+textarea{width:175px; height: 100px;display: inline-block; box-sizing:border-box}
+label{display: inline-block;float: left;clear: left;width: 100px;text-align: right;}
+a, span{cursor: default}
+a:hover, span:hover{text-decoration:underline;}
+dl{margin-top: 0px;}
+dd{margin-left: 10px;}
+.red{background:red;}
+.green{background:green;}
+.selectSubCategory:hover, .selectCategory:hover{text-decoration:underline;}
+#newOrChangeForm, #passwordTableContainer, #changePasswordForm, #messageBox, #timeoutMessage {display:none}
+#passwordTableContainer{grid-template-columns:150px auto;grid-template-rows:30px auto;height:100%}
+#headerRow{width:500px;grid-column-start:1;grid-column-end:2;grid-row-start:1;grid-row-end:1;}
+#categoryTree{max-height:100vh;cursor:default;position:sticky;top:0;overflow:scroll;scrollbar-width:thin;scrollbar-color:#dddddd #F9F9F9;white-space:nowrap;padding-bottom:10px;grid-column-start:1;grid-column-end:1;grid-row-start:2;grid-row-end:2;}
+#passwordTable{grid-column-start:2;grid-column-end:2;grid-row-start:2;grid-row-end:2;}
+#timeoutMessage {position: fixed;bottom:0vh;margin-bottom:5px;left: 5px;z-index: 1;background-color: #F9F9F9;}
+#messageBox{z-index:1;position:fixed;top:0;margin:auto;left:0;right:0;height:50px;line-height:50px;width:50%;vertical-align:middle;text-align: center;font-size: 120%;font-weight:bold;color:white;border-radius:5px;}
+#openChangePasswordForm{z-index:1;position:fixed;bottom:0;right:0;background-color:#fff;}
+</style>
+<style>
+@media only screen and (max-width:600px) 
+{
+	td,th{max-width:150px;}
+	.url{display:none}
+	#passwordTable{grid-column-start:1;grid-column-end:2;grid-row-start:2;grid-row-end:2;}
+	#categoryTree{display:none}
+	#openChangePasswordForm{display:none}
+
+}
+</style>
+<script src="crypto.js"></script>
+<script src="scripts.js"></script>
+</head>
+
+<body>
+
+<form id="loginForm"><input type="password" id="masterPassword" placeholder="password"/><input type="button" value="login" id="loginButton" /></form>
+
+<form id="newOrChangeForm">
+	<input type="hidden" id="newOrChangeForm_id">
+	<label>description: </label>
+	<input type="text" id="newOrChangeForm_description" required><br />
+	
+	<label>category: </label>
+	<select id="newOrChangeForm_category" required>
+		<option></option>
+		
+	</select><br />
+	
+	<label>subcategory: </label>
+	<select id="newOrChangeForm_subcategory" required>
+		<option></option>
+	</select><br />
+	
+	<label>url/IP/host: </label>
+	<input type="text" id="newOrChangeForm_url"><br />
+	<label>login: </label>
+	<input type="text" id="newOrChangeForm_login">&nbsp;<span id="copyLoginFromForm">📋</span><br />
+	<label>password: </label>
+	<input type="text" id="newOrChangeForm_password" required>&nbsp;<span id="copyPasswordFromForm">📋</span><br />
+	<label>complexity: </label> A<input type="checkbox" id="newPassword_basicLatinLetters" class="newPasswordComplexitySwitch" title="latin letters">	
+								9<input type="checkbox" id="newPassword_numbers" class="newPasswordComplexitySwitch" title="numbers">
+								$<input type="checkbox" id="newPassword_commonSpecialCharacters" class="newPasswordComplexitySwitch" title="common special chars">
+								¶<input type="checkbox" id="newPassword_unCommonSpecialCharacters" class="newPasswordComplexitySwitch" title="uncommon special chars">
+								Ж<input type="checkbox" id="newPassword_foreignLetters" class="newPasswordComplexitySwitch" title="foreign letters">
+								✈<input type="checkbox" id="newPassword_objects" class="newPasswordComplexitySwitch" title="objects and cards">
+								🙂<input type="checkbox" id="newPassword_emojis" class="newPasswordComplexitySwitch" title="emojis"><br />
+	
+	<label>comment: </label>
+	<textarea id="newOrChangeForm_comment"></textarea><br />
+	
+	<label>&nbsp;</label><input type="submit" value="save" id="saveButton"><br />
+	<label>&nbsp;</label><input type="button" value="delete" id="deleteButton"><br />
+	<label>&nbsp;</label><input type="button" value="cancel" id="cancelButton">
+</form>
+
+<div id="passwordTableContainer">
+	
+	<div id="headerRow">
+		<a href="." title="logout">🚪</a>
+		<input id='searchField' type='text' placeholder="search">
+		<input id='newAccount' type='button' value='new account'>
+		<span id="openChangePasswordForm" title="change master password">⚙️</span>	
+	</div>
+	<div id="categoryTree" title="click to filter"></div>
+	<div id="passwordTable"></div>	
+
+</div>
+
+<form id="changePasswordForm">Save accounts with new master password. <br />
+	<input type="password" id="originalMasterPassword" placeholder="original master password"/><br />
+	<input type="password" id="newMasterPassword" placeholder="new master password"/><br />
+	<div id="newMasterPasswordHash"></div>
+	
+	<input type="button" value="re-encrypt" id="changePasswordButton" disabled /><br />
+	Note: This will make a copy. Your accounts will be available using the old master password as well until you delete the old hash from config.
+</form>
+<div id="messageBox"></div>
+<div id="timeoutMessage"></div>
+</body>
+
+</html>
